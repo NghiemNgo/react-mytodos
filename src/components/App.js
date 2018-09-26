@@ -7,12 +7,37 @@ import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 import { getState, setState } from '../actions/localStorage';
 import cloneDeep from 'lodash/cloneDeep';
 
+
 class App extends Component {
 
   constructor(props) {
     super(props);
     this.state = cloneDeep(getState());
     this.saveState = this.saveState.bind(this);
+    this.getFilterCode = this.getFilterCode.bind(this);
+  }
+
+  getFilterCode(filter) {
+    switch (filter) {
+      case 'new':
+        return config.TASK_NEW;
+      case 'doing':
+        return config.TASK_DOING;
+      case 'complete':
+        return config.TASK_DONE;
+      default:
+        return config.SHOW_ALL
+    }
+  }
+
+  componentWillMount() {
+    if (this.props.location) {
+      let pathName = this.props.location.pathname;
+      if (pathName.split('/todos/').length > 1) {
+        let filter = pathName.split('/todos/')[1]
+        this.setState({ filterTodo: this.getFilterCode(filter) })
+      }
+    }
   }
 
   saveState = () => {
@@ -27,9 +52,9 @@ class App extends Component {
       processing: config.TASK_NEW
     };
     this.setState((state) => {
-      return {todos: [...state.todos, newTodo]}
+      return { todos: [...state.todos, newTodo] }
     });
-    this.state.todoId ++;
+    this.state.todoId++;
     this.saveState();
     console.log(this.state);
   };
@@ -57,25 +82,19 @@ class App extends Component {
 
   getTodos = () => {
     if (this.state.filterTodo === config.SHOW_ALL) {
-      return this.state.todos.filter( t => (t.processing !== config.TASK_DELETE));
+      return this.state.todos.filter(t => (t.processing !== config.TASK_DELETE));
     } else {
-      return this.state.todos.filter( t => (t.processing === this.state.filterTodo));
+      return this.state.todos.filter(t => (t.processing === this.state.filterTodo));
     }
   }
 
   render() {
     return (
-      <Router>
-        <div className="App">
-          <InputTodos addTodo={this.addTodo} />
-          <TabTodo handlefillterTodo={this.filterdTodo} typeFilter={this.state.filterTodo} />
-          <TodoList todos={this.getTodos()} handleClickTodo={this.updateTodo}/>
-          <Route path="/todos" />
-          <Route path="/todos/new" />
-          <Route path="/todos/doing" />
-          <Route path="/todos/complete" />
-        </div>
-      </Router>
+      <div className="App">
+        <InputTodos addTodo={this.addTodo} />
+        <TabTodo handlefillterTodo={this.filterdTodo} typeFilter={this.state.filterTodo} />
+        <TodoList todos={this.getTodos()} handleClickTodo={this.updateTodo} />
+      </div>
     );
   }
 }
